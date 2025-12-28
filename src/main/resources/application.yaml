@@ -1,15 +1,5 @@
 spring:
-  profiles:
-    active: prod
-
----
-
-spring:
-  profiles:
-    active: dev
-
----
-
-spring:
+  application:
+    name: deullim-api
   profiles:
     active: local
