@@ -1,5 +1,4 @@
 FROM eclipse-temurin:21-jre
-LABEL authors="byungwook.min"
 
 RUN adduser --system --group user
 
