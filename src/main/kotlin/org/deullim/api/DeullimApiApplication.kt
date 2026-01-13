@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class DeullimApiApplication
 
 fun main(args: Array<String>) {
-	runApplication<DeullimApiApplication>(*args)
+    runApplication<DeullimApiApplication>(*args)
 }
