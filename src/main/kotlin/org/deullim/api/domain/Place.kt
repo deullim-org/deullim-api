@@ -20,6 +20,10 @@ class Place protected constructor() : Base() {
     var alias: String? = null
         protected set
 
+    @Column(name = "icon", nullable = true)
+    var icon: String? = null
+        protected set
+
     // TODO: 연관 처리
     @Column(name = "location_id", nullable = false, updatable = false)
     var locationId: Long = 0
@@ -28,10 +32,6 @@ class Place protected constructor() : Base() {
     // TODO: 연관 처리
     @Column(name = "member_id", nullable = false, updatable = false)
     var memberId: Long = 0
-        protected set
-
-    @Column(name = "icon", nullable = true)
-    var icon: String? = null
         protected set
 
     companion object {
