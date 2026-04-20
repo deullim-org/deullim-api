@@ -13,7 +13,6 @@ import jakarta.persistence.Table
 @Entity
 @Table(name = "places")
 class Place protected constructor() : Base() {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -43,12 +42,13 @@ class Place protected constructor() : Base() {
 //            location: Location,
             alias: String? = null,
             icon: String? = null,
-        ): Place = Place().apply {
-            this.member = member
+        ): Place =
+            Place().apply {
+                this.member = member
 //            this.location = location
-            this.alias = alias
-            this.icon = icon
-        }
+                this.alias = alias
+                this.icon = icon
+            }
     }
 
     fun changeAlias(newAlias: String) {

@@ -40,7 +40,11 @@ class Member protected constructor() : Base() { // ✅ private -> protected
         protected set
 
     companion object {
-        fun create(nickname: String, device: Device, source: SourceType) = Member().apply {
+        fun create(
+            nickname: String,
+            device: Device,
+            source: SourceType,
+        ) = Member().apply {
             require(nickname.isNotBlank()) { "nickname must not be blank" }
             require(device.token.isNotBlank()) { "device.token must not be blank" }
             require(device.os.isNotBlank()) { "device.os must not be blank" }

@@ -12,13 +12,13 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 
 @Entity
-@Table(name = "settings",
+@Table(
+    name = "settings",
     uniqueConstraints = [
-        UniqueConstraint(name = "uk_settings_member_id", columnNames = ["member_id"])
-    ]
+        UniqueConstraint(name = "uk_settings_member_id", columnNames = ["member_id"]),
+    ],
 )
 class Setting protected constructor() : Base() {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -38,7 +38,10 @@ class Setting protected constructor() : Base() {
         const val MAX_RADIUS_METER: Double = 2000.0
         const val DEFAULT_RADIUS_METER: Double = 200.0
 
-        fun create(member: Member, radius: Double?): Setting {
+        fun create(
+            member: Member,
+            radius: Double?,
+        ): Setting {
             if (radius != null) {
                 require(radius in MIN_RADIUS_METER..MAX_RADIUS_METER) {
                     "radius must be between $MIN_RADIUS_METER and $MAX_RADIUS_METER meters"

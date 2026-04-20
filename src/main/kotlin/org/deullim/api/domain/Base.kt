@@ -14,11 +14,9 @@ import java.time.Instant
 abstract class Base(
     @Version
     var version: Long = 0,
-
     @CreatedDate
     @Column(updatable = false)
     var createdAt: Instant? = null,
-
     @LastModifiedDate
     var updatedAt: Instant? = null,
 )
