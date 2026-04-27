@@ -1,10 +1,12 @@
 package org.deullim.api.domain.note
 
+import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 
 @Embeddable
 data class Radius(
-    val meters: Int
+    @Column(nullable = false)
+    val meters: Int,
 ) {
     init {
         require(meters in MIN_RADIUS..MAX_RADIUS) {
