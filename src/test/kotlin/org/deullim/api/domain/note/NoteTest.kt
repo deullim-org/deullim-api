@@ -1,5 +1,8 @@
 package org.deullim.api.domain.note
 
+import org.deullim.api.domain.location.Coordinate
+import org.deullim.api.domain.location.Location
+import org.deullim.api.domain.location.LocationSource
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -8,6 +11,15 @@ import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+
+private fun testLocation(id: String = "loc_test"): Location =
+    Location(
+        id = id,
+        coordinate = Coordinate(37.5665, 126.9780),
+        source = LocationSource.NAVER,
+        sourceId = "1",
+        name = "테스트 위치",
+    )
 
 @DisplayName("Note 도메인 테스트")
 class NoteTest {
@@ -83,16 +95,16 @@ class NoteTest {
         @DisplayName("Note 생성 시 필수 필드만으로 생성할 수 있다")
         fun `should create note with required fields only`() {
             val title = "테스트 노트"
-            val locationId = "loc_123"
+            val location = testLocation("loc_123")
 
             val note =
                 Note(
                     title = title,
-                    locationId = locationId,
+                    location = location,
                 )
 
             assertEquals(title, note.title)
-            assertEquals(locationId, note.locationId)
+            assertEquals(location, note.location)
             assertEquals(NoteStatus.ACTIVE, note.status)
             assertEquals(NotePolicy.DAY, note.policy)
             assertEquals(Radius.DEFAULT, note.radius)
@@ -104,7 +116,7 @@ class NoteTest {
         fun `should create note with all fields`() {
             val title = "전체 필드 테스트"
             val content = "노트 내용입니다"
-            val locationId = "loc_456"
+            val location = testLocation("loc_456")
             val status = NoteStatus.INACTIVE
             val policy = NotePolicy.WEEK
             val radius = Radius(500)
@@ -114,7 +126,7 @@ class NoteTest {
                 Note(
                     title = title,
                     content = content,
-                    locationId = locationId,
+                    location = location,
                     status = status,
                     policy = policy,
                     radius = radius,
@@ -123,7 +135,7 @@ class NoteTest {
 
             assertEquals(title, note.title)
             assertEquals(content, note.content)
-            assertEquals(locationId, note.locationId)
+            assertEquals(location, note.location)
             assertEquals(status, note.status)
             assertEquals(policy, note.policy)
             assertEquals(radius, note.radius)
@@ -133,7 +145,7 @@ class NoteTest {
         @Test
         @DisplayName("edit으로 title만 수정할 수 있다")
         fun `should edit only title`() {
-            val note = Note(title = "원래 제목", locationId = "loc_123")
+            val note = Note(title = "원래 제목", location = testLocation())
             val newTitle = "수정된 제목"
 
             note.edit(title = newTitle)
@@ -144,7 +156,7 @@ class NoteTest {
         @Test
         @DisplayName("edit으로 content를 수정할 수 있다")
         fun `should edit content`() {
-            val note = Note(title = "제목", locationId = "loc_123")
+            val note = Note(title = "제목", location = testLocation())
             val newContent = "새로운 내용"
 
             note.edit(content = newContent)
@@ -155,7 +167,7 @@ class NoteTest {
         @Test
         @DisplayName("edit으로 content를 null로 비울 수 있다")
         fun `should clear content via edit`() {
-            val note = Note(title = "제목", content = "초기 내용", locationId = "loc_123")
+            val note = Note(title = "제목", content = "초기 내용", location = testLocation())
 
             note.edit(content = null)
 
@@ -165,19 +177,20 @@ class NoteTest {
         @Test
         @DisplayName("edit으로 여러 필드를 동시에 수정할 수 있다")
         fun `should edit multiple fields at once`() {
-            val note = Note(title = "제목", locationId = "loc_123")
+            val note = Note(title = "제목", location = testLocation("loc_old"))
+            val newLocation = testLocation("loc_new")
             val newActivatedAt = LocalDateTime.of(2025, 6, 15, 10, 0)
 
             note.edit(
                 title = "새 제목",
-                locationId = "loc_456",
+                location = newLocation,
                 policy = NotePolicy.MONTH,
                 radius = Radius(1000),
                 activatedAt = newActivatedAt,
             )
 
             assertEquals("새 제목", note.title)
-            assertEquals("loc_456", note.locationId)
+            assertEquals(newLocation, note.location)
             assertEquals(NotePolicy.MONTH, note.policy)
             assertEquals(Radius(1000), note.radius)
             assertEquals(newActivatedAt, note.activatedAt)
@@ -186,7 +199,7 @@ class NoteTest {
         @Test
         @DisplayName("Note를 비활성화할 수 있다")
         fun `should deactivate note`() {
-            val note = Note(title = "제목", locationId = "loc_123")
+            val note = Note(title = "제목", location = testLocation())
 
             note.deactivate()
 
@@ -199,7 +212,7 @@ class NoteTest {
             val note =
                 Note(
                     title = "제목",
-                    locationId = "loc_123",
+                    location = testLocation(),
                     status = NoteStatus.INACTIVE,
                 )
 
@@ -211,7 +224,7 @@ class NoteTest {
         @Test
         @DisplayName("Note를 삭제할 수 있다")
         fun `should delete note`() {
-            val note = Note(title = "제목", locationId = "loc_123")
+            val note = Note(title = "제목", location = testLocation())
 
             note.delete()
 
@@ -221,7 +234,7 @@ class NoteTest {
         @Test
         @DisplayName("DELETED 상태의 Note는 edit 시 예외가 발생한다")
         fun `should throw when editing deleted note`() {
-            val note = Note(title = "제목", locationId = "loc_123")
+            val note = Note(title = "제목", location = testLocation())
             note.delete()
 
             val exception =
@@ -234,7 +247,7 @@ class NoteTest {
         @Test
         @DisplayName("DELETED 상태의 Note는 activate 시 예외가 발생한다")
         fun `should throw when activating deleted note`() {
-            val note = Note(title = "제목", locationId = "loc_123")
+            val note = Note(title = "제목", location = testLocation())
             note.delete()
 
             val exception =
@@ -247,7 +260,7 @@ class NoteTest {
         @Test
         @DisplayName("DELETED 상태의 Note는 deactivate 시 예외가 발생한다")
         fun `should throw when deactivating deleted note`() {
-            val note = Note(title = "제목", locationId = "loc_123")
+            val note = Note(title = "제목", location = testLocation())
             note.delete()
 
             val exception =
@@ -260,7 +273,7 @@ class NoteTest {
         @Test
         @DisplayName("delete는 멱등성이 있다")
         fun `delete should be idempotent`() {
-            val note = Note(title = "제목", locationId = "loc_123")
+            val note = Note(title = "제목", location = testLocation())
 
             note.delete()
             note.delete()
@@ -270,13 +283,115 @@ class NoteTest {
     }
 
     @Nested
+    @DisplayName("rescheduleAfterNotification 테스트")
+    inner class RescheduleTest {
+        private val baseTime = LocalDateTime.of(2026, 4, 27, 12, 0)
+
+        @Test
+        @DisplayName("NONE 정책은 알림 후 INACTIVE로 전환된다")
+        fun `NONE policy should turn note inactive after notification`() {
+            val note =
+                Note(
+                    title = "일회성",
+                    location = testLocation(),
+                    policy = NotePolicy.NONE,
+                    activatedAt = baseTime,
+                )
+
+            note.rescheduleAfterNotification(now = baseTime)
+
+            assertEquals(NoteStatus.INACTIVE, note.status)
+            assertEquals(baseTime, note.activatedAt)
+        }
+
+        @Test
+        @DisplayName("DAY 정책은 알림 후 활성화 시점이 1일 뒤로 이동한다")
+        fun `DAY policy should push activatedAt one day forward`() {
+            val note =
+                Note(
+                    title = "매일",
+                    location = testLocation(),
+                    policy = NotePolicy.DAY,
+                    activatedAt = baseTime,
+                )
+
+            note.rescheduleAfterNotification(now = baseTime)
+
+            assertEquals(NoteStatus.ACTIVE, note.status)
+            assertEquals(baseTime.plusDays(1), note.activatedAt)
+        }
+
+        @Test
+        @DisplayName("WEEK 정책은 알림 후 활성화 시점이 1주 뒤로 이동한다")
+        fun `WEEK policy should push activatedAt one week forward`() {
+            val note =
+                Note(
+                    title = "매주",
+                    location = testLocation(),
+                    policy = NotePolicy.WEEK,
+                    activatedAt = baseTime,
+                )
+
+            note.rescheduleAfterNotification(now = baseTime)
+
+            assertEquals(baseTime.plusWeeks(1), note.activatedAt)
+        }
+
+        @Test
+        @DisplayName("MONTH 정책은 알림 후 활성화 시점이 1개월 뒤로 이동한다")
+        fun `MONTH policy should push activatedAt one month forward`() {
+            val note =
+                Note(
+                    title = "매달",
+                    location = testLocation(),
+                    policy = NotePolicy.MONTH,
+                    activatedAt = baseTime,
+                )
+
+            note.rescheduleAfterNotification(now = baseTime)
+
+            assertEquals(baseTime.plusMonths(1), note.activatedAt)
+        }
+
+        @Test
+        @DisplayName("INACTIVE 상태에서는 reschedule 시 예외가 발생한다")
+        fun `should throw when rescheduling inactive note`() {
+            val note =
+                Note(
+                    title = "제목",
+                    location = testLocation(),
+                    status = NoteStatus.INACTIVE,
+                )
+
+            val exception =
+                assertThrows<IllegalStateException> {
+                    note.rescheduleAfterNotification()
+                }
+            assertEquals("Cannot reschedule a non-active note", exception.message)
+        }
+
+        @Test
+        @DisplayName("DELETED 상태에서는 reschedule 시 예외가 발생한다")
+        fun `should throw when rescheduling deleted note`() {
+            val note = Note(title = "제목", location = testLocation())
+            note.delete()
+
+            val exception =
+                assertThrows<IllegalStateException> {
+                    note.rescheduleAfterNotification()
+                }
+            assertEquals("Cannot reschedule a non-active note", exception.message)
+        }
+    }
+
+    @Nested
     @DisplayName("Note 동등성 테스트")
     inner class NoteEqualityTest {
         @Test
         @DisplayName("같은 id를 가진 영속 Note는 동등하다")
         fun `persisted notes with same id should be equal`() {
-            val note1 = Note(id = 1L, title = "A", locationId = "loc_1")
-            val note2 = Note(id = 1L, title = "B", locationId = "loc_2")
+            val note1 = Note(id = 1L, title = "A", location = testLocation("loc_1"))
+            val note2 = Note(id = 1L, title = "B", location = testLocation("loc_2"))
 
             assertEquals(note1, note2)
             assertEquals(note1.hashCode(), note2.hashCode())
@@ -285,8 +400,8 @@ class NoteTest {
         @Test
         @DisplayName("transient(id=0) Note 두 개는 동일 인스턴스가 아니면 동등하지 않다")
         fun `transient notes are not equal unless same instance`() {
-            val note1 = Note(title = "A", locationId = "loc_1")
-            val note2 = Note(title = "A", locationId = "loc_1")
+            val note1 = Note(title = "A", location = testLocation())
+            val note2 = Note(title = "A", location = testLocation())
 
             assertNotEquals(note1, note2)
         }

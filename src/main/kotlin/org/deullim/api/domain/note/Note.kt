@@ -5,11 +5,15 @@ import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.deullim.api.common.BaseTimeEntity
+import org.deullim.api.domain.location.Location
 import java.time.LocalDateTime
 
 @Entity
@@ -22,8 +26,9 @@ class Note(
     var title: String,
     @Column(columnDefinition = "TEXT")
     var content: String? = null,
-    @Column(nullable = false, length = 100)
-    var locationId: String,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = false)
+    var location: Location,
     // TODO: Member 도메인 구현 후 관계 설정
     // @Column(nullable = false)
     // var memberId: Long,
@@ -41,7 +46,7 @@ class Note(
     fun edit(
         title: String = this.title,
         content: String? = this.content,
-        locationId: String = this.locationId,
+        location: Location = this.location,
         policy: NotePolicy = this.policy,
         radius: Radius = this.radius,
         activatedAt: LocalDateTime = this.activatedAt,
@@ -49,7 +54,7 @@ class Note(
         check(status != NoteStatus.DELETED) { "Cannot edit a deleted note" }
         this.title = title
         this.content = content
-        this.locationId = locationId
+        this.location = location
         this.policy = policy
         this.radius = radius
         this.activatedAt = activatedAt
@@ -67,6 +72,16 @@ class Note(
 
     fun delete() {
         this.status = NoteStatus.DELETED
+    }
+
+    fun rescheduleAfterNotification(now: LocalDateTime = LocalDateTime.now()) {
+        check(status == NoteStatus.ACTIVE) { "Cannot reschedule a non-active note" }
+        when (policy) {
+            NotePolicy.NONE -> status = NoteStatus.INACTIVE
+            NotePolicy.DAY -> activatedAt = now.plusDays(1)
+            NotePolicy.WEEK -> activatedAt = now.plusWeeks(1)
+            NotePolicy.MONTH -> activatedAt = now.plusMonths(1)
+        }
     }
 
     override fun equals(other: Any?): Boolean {
