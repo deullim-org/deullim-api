@@ -12,14 +12,19 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
-private fun testLocation(id: String = "loc_test"): Location =
-    Location(
-        id = id,
-        coordinate = Coordinate(37.5665, 126.9780),
+private fun testLocation(sourceId: String = "test"): Location =
+    Location.of(
         source = LocationSource.NAVER,
-        sourceId = "1",
+        sourceId = sourceId,
+        coordinate = Coordinate(37.5665, 126.9780),
         name = "테스트 위치",
     )
+
+private fun Note.injectId(id: Long) {
+    val field = Note::class.java.getDeclaredField("id")
+    field.isAccessible = true
+    field.set(this, id)
+}
 
 @DisplayName("Note 도메인 테스트")
 class NoteTest {
@@ -92,16 +97,12 @@ class NoteTest {
     @DisplayName("Note 엔티티 테스트")
     inner class NoteEntityTest {
         @Test
-        @DisplayName("Note 생성 시 필수 필드만으로 생성할 수 있다")
+        @DisplayName("Note.create로 필수 필드만으로 생성할 수 있다")
         fun `should create note with required fields only`() {
             val title = "테스트 노트"
             val location = testLocation("loc_123")
 
-            val note =
-                Note(
-                    title = title,
-                    location = location,
-                )
+            val note = Note.create(title = title, location = location)
 
             assertEquals(title, note.title)
             assertEquals(location, note.location)
@@ -112,22 +113,20 @@ class NoteTest {
         }
 
         @Test
-        @DisplayName("Note 생성 시 모든 필드를 지정할 수 있다")
+        @DisplayName("Note.create로 모든 필드를 지정할 수 있다")
         fun `should create note with all fields`() {
             val title = "전체 필드 테스트"
             val content = "노트 내용입니다"
             val location = testLocation("loc_456")
-            val status = NoteStatus.INACTIVE
             val policy = NotePolicy.WEEK
             val radius = Radius(500)
             val activatedAt = LocalDateTime.of(2025, 1, 1, 12, 0)
 
             val note =
-                Note(
+                Note.create(
                     title = title,
-                    content = content,
                     location = location,
-                    status = status,
+                    content = content,
                     policy = policy,
                     radius = radius,
                     activatedAt = activatedAt,
@@ -136,16 +135,24 @@ class NoteTest {
             assertEquals(title, note.title)
             assertEquals(content, note.content)
             assertEquals(location, note.location)
-            assertEquals(status, note.status)
+            assertEquals(NoteStatus.ACTIVE, note.status)
             assertEquals(policy, note.policy)
             assertEquals(radius, note.radius)
             assertEquals(activatedAt, note.activatedAt)
         }
 
         @Test
+        @DisplayName("title이 공백이면 생성 시 예외가 발생한다")
+        fun `should throw when creating note with blank title`() {
+            assertThrows<IllegalArgumentException> {
+                Note.create(title = " ", location = testLocation())
+            }
+        }
+
+        @Test
         @DisplayName("edit으로 title만 수정할 수 있다")
         fun `should edit only title`() {
-            val note = Note(title = "원래 제목", location = testLocation())
+            val note = Note.create(title = "원래 제목", location = testLocation())
             val newTitle = "수정된 제목"
 
             note.edit(title = newTitle)
@@ -156,7 +163,7 @@ class NoteTest {
         @Test
         @DisplayName("edit으로 content를 수정할 수 있다")
         fun `should edit content`() {
-            val note = Note(title = "제목", location = testLocation())
+            val note = Note.create(title = "제목", location = testLocation())
             val newContent = "새로운 내용"
 
             note.edit(content = newContent)
@@ -167,7 +174,7 @@ class NoteTest {
         @Test
         @DisplayName("edit으로 content를 null로 비울 수 있다")
         fun `should clear content via edit`() {
-            val note = Note(title = "제목", content = "초기 내용", location = testLocation())
+            val note = Note.create(title = "제목", content = "초기 내용", location = testLocation())
 
             note.edit(content = null)
 
@@ -177,7 +184,7 @@ class NoteTest {
         @Test
         @DisplayName("edit으로 여러 필드를 동시에 수정할 수 있다")
         fun `should edit multiple fields at once`() {
-            val note = Note(title = "제목", location = testLocation("loc_old"))
+            val note = Note.create(title = "제목", location = testLocation("loc_old"))
             val newLocation = testLocation("loc_new")
             val newActivatedAt = LocalDateTime.of(2025, 6, 15, 10, 0)
 
@@ -197,9 +204,19 @@ class NoteTest {
         }
 
         @Test
+        @DisplayName("edit 시 title이 공백이면 예외가 발생한다")
+        fun `should throw when editing with blank title`() {
+            val note = Note.create(title = "제목", location = testLocation())
+
+            assertThrows<IllegalArgumentException> {
+                note.edit(title = " ")
+            }
+        }
+
+        @Test
         @DisplayName("Note를 비활성화할 수 있다")
         fun `should deactivate note`() {
-            val note = Note(title = "제목", location = testLocation())
+            val note = Note.create(title = "제목", location = testLocation())
 
             note.deactivate()
 
@@ -207,14 +224,10 @@ class NoteTest {
         }
 
         @Test
-        @DisplayName("Note를 활성화할 수 있다")
+        @DisplayName("INACTIVE 상태에서 Note를 활성화할 수 있다")
         fun `should activate note`() {
-            val note =
-                Note(
-                    title = "제목",
-                    location = testLocation(),
-                    status = NoteStatus.INACTIVE,
-                )
+            val note = Note.create(title = "제목", location = testLocation())
+            note.deactivate()
 
             note.activate()
 
@@ -224,7 +237,7 @@ class NoteTest {
         @Test
         @DisplayName("Note를 삭제할 수 있다")
         fun `should delete note`() {
-            val note = Note(title = "제목", location = testLocation())
+            val note = Note.create(title = "제목", location = testLocation())
 
             note.delete()
 
@@ -234,7 +247,7 @@ class NoteTest {
         @Test
         @DisplayName("DELETED 상태의 Note는 edit 시 예외가 발생한다")
         fun `should throw when editing deleted note`() {
-            val note = Note(title = "제목", location = testLocation())
+            val note = Note.create(title = "제목", location = testLocation())
             note.delete()
 
             val exception =
@@ -247,7 +260,7 @@ class NoteTest {
         @Test
         @DisplayName("DELETED 상태의 Note는 activate 시 예외가 발생한다")
         fun `should throw when activating deleted note`() {
-            val note = Note(title = "제목", location = testLocation())
+            val note = Note.create(title = "제목", location = testLocation())
             note.delete()
 
             val exception =
@@ -260,7 +273,7 @@ class NoteTest {
         @Test
         @DisplayName("DELETED 상태의 Note는 deactivate 시 예외가 발생한다")
         fun `should throw when deactivating deleted note`() {
-            val note = Note(title = "제목", location = testLocation())
+            val note = Note.create(title = "제목", location = testLocation())
             note.delete()
 
             val exception =
@@ -273,7 +286,7 @@ class NoteTest {
         @Test
         @DisplayName("delete는 멱등성이 있다")
         fun `delete should be idempotent`() {
-            val note = Note(title = "제목", location = testLocation())
+            val note = Note.create(title = "제목", location = testLocation())
 
             note.delete()
             note.delete()
@@ -291,7 +304,7 @@ class NoteTest {
         @DisplayName("NONE 정책은 알림 후 INACTIVE로 전환된다")
         fun `NONE policy should turn note inactive after notification`() {
             val note =
-                Note(
+                Note.create(
                     title = "일회성",
                     location = testLocation(),
                     policy = NotePolicy.NONE,
@@ -308,7 +321,7 @@ class NoteTest {
         @DisplayName("DAY 정책은 알림 후 활성화 시점이 1일 뒤로 이동한다")
         fun `DAY policy should push activatedAt one day forward`() {
             val note =
-                Note(
+                Note.create(
                     title = "매일",
                     location = testLocation(),
                     policy = NotePolicy.DAY,
@@ -325,7 +338,7 @@ class NoteTest {
         @DisplayName("WEEK 정책은 알림 후 활성화 시점이 1주 뒤로 이동한다")
         fun `WEEK policy should push activatedAt one week forward`() {
             val note =
-                Note(
+                Note.create(
                     title = "매주",
                     location = testLocation(),
                     policy = NotePolicy.WEEK,
@@ -341,7 +354,7 @@ class NoteTest {
         @DisplayName("MONTH 정책은 알림 후 활성화 시점이 1개월 뒤로 이동한다")
         fun `MONTH policy should push activatedAt one month forward`() {
             val note =
-                Note(
+                Note.create(
                     title = "매달",
                     location = testLocation(),
                     policy = NotePolicy.MONTH,
@@ -356,12 +369,8 @@ class NoteTest {
         @Test
         @DisplayName("INACTIVE 상태에서는 reschedule 시 예외가 발생한다")
         fun `should throw when rescheduling inactive note`() {
-            val note =
-                Note(
-                    title = "제목",
-                    location = testLocation(),
-                    status = NoteStatus.INACTIVE,
-                )
+            val note = Note.create(title = "제목", location = testLocation())
+            note.deactivate()
 
             val exception =
                 assertThrows<IllegalStateException> {
@@ -373,7 +382,7 @@ class NoteTest {
         @Test
         @DisplayName("DELETED 상태에서는 reschedule 시 예외가 발생한다")
         fun `should throw when rescheduling deleted note`() {
-            val note = Note(title = "제목", location = testLocation())
+            val note = Note.create(title = "제목", location = testLocation())
             note.delete()
 
             val exception =
@@ -390,8 +399,10 @@ class NoteTest {
         @Test
         @DisplayName("같은 id를 가진 영속 Note는 동등하다")
         fun `persisted notes with same id should be equal`() {
-            val note1 = Note(id = 1L, title = "A", location = testLocation("loc_1"))
-            val note2 = Note(id = 1L, title = "B", location = testLocation("loc_2"))
+            val note1 = Note.create(title = "A", location = testLocation("loc_1"))
+            val note2 = Note.create(title = "B", location = testLocation("loc_2"))
+            note1.injectId(1L)
+            note2.injectId(1L)
 
             assertEquals(note1, note2)
             assertEquals(note1.hashCode(), note2.hashCode())
@@ -400,8 +411,8 @@ class NoteTest {
         @Test
         @DisplayName("transient(id=0) Note 두 개는 동일 인스턴스가 아니면 동등하지 않다")
         fun `transient notes are not equal unless same instance`() {
-            val note1 = Note(title = "A", location = testLocation())
-            val note2 = Note(title = "A", location = testLocation())
+            val note1 = Note.create(title = "A", location = testLocation())
+            val note2 = Note.create(title = "A", location = testLocation())
 
             assertNotEquals(note1, note2)
         }

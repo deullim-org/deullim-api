@@ -86,24 +86,22 @@ class LocationTest {
     @DisplayName("Location 엔티티 테스트")
     inner class LocationEntityTest {
         @Test
-        @DisplayName("Location 생성 시 모든 필드가 올바르게 저장된다")
-        fun `should create location with all fields`() {
-            val id = "naver_12345"
+        @DisplayName("Location.of로 모든 필드를 지정해 생성할 수 있다")
+        fun `should create location with all fields via factory`() {
             val coordinate = Coordinate(37.5665, 126.9780)
             val source = LocationSource.NAVER
             val sourceId = "12345"
             val name = "서울시청"
 
             val location =
-                Location(
-                    id = id,
-                    coordinate = coordinate,
+                Location.of(
                     source = source,
                     sourceId = sourceId,
+                    coordinate = coordinate,
                     name = name,
                 )
 
-            assertEquals(id, location.id)
+            assertEquals("naver_12345", location.id)
             assertEquals(coordinate, location.coordinate)
             assertEquals(source, location.source)
             assertEquals(sourceId, location.sourceId)
@@ -113,37 +111,33 @@ class LocationTest {
         @Test
         @DisplayName("USER 소스로 Location을 생성할 수 있다")
         fun `should create location with USER source`() {
-            val source = LocationSource.USER
-
             val location =
-                Location(
-                    id = "user_custom_location",
-                    coordinate = Coordinate(37.5665, 126.9780),
-                    source = source,
+                Location.of(
+                    source = LocationSource.USER,
                     sourceId = "custom_location",
+                    coordinate = Coordinate(37.5665, 126.9780),
                     name = "사용자 지정 위치",
                 )
 
             assertEquals(LocationSource.USER, location.source)
+            assertEquals("user_custom_location", location.id)
         }
 
         @Test
         @DisplayName("Location의 좌표를 통해 다른 Location과의 거리를 계산할 수 있다")
         fun `should calculate distance between two locations`() {
             val location1 =
-                Location(
-                    id = "loc1",
-                    coordinate = Coordinate(37.5665, 126.9780),
+                Location.of(
                     source = LocationSource.NAVER,
                     sourceId = "1",
+                    coordinate = Coordinate(37.5665, 126.9780),
                     name = "서울시청",
                 )
             val location2 =
-                Location(
-                    id = "loc2",
-                    coordinate = Coordinate(37.4979, 127.0276),
+                Location.of(
                     source = LocationSource.NAVER,
                     sourceId = "2",
+                    coordinate = Coordinate(37.4979, 127.0276),
                     name = "강남역",
                 )
 
@@ -169,28 +163,52 @@ class LocationTest {
         }
 
         @Test
-        @DisplayName("같은 id를 가진 Location은 동등하다")
-        fun `locations with same id should be equal`() {
+        @DisplayName("같은 source/sourceId로 만든 Location은 동등하다")
+        fun `locations with same composed id should be equal`() {
             val coord = Coordinate(37.5665, 126.9780)
             val a =
-                Location(
-                    id = "naver_1",
-                    coordinate = coord,
+                Location.of(
                     source = LocationSource.NAVER,
                     sourceId = "1",
+                    coordinate = coord,
                     name = "A",
                 )
             val b =
-                Location(
-                    id = "naver_1",
-                    coordinate = coord,
+                Location.of(
                     source = LocationSource.NAVER,
                     sourceId = "1",
+                    coordinate = coord,
                     name = "B",
                 )
 
             assertEquals(a, b)
             assertEquals(a.hashCode(), b.hashCode())
+        }
+
+        @Test
+        @DisplayName("sourceId가 공백이면 예외가 발생한다")
+        fun `should throw when sourceId is blank`() {
+            assertThrows<IllegalArgumentException> {
+                Location.of(
+                    source = LocationSource.NAVER,
+                    sourceId = " ",
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "이름",
+                )
+            }
+        }
+
+        @Test
+        @DisplayName("name이 공백이면 예외가 발생한다")
+        fun `should throw when name is blank`() {
+            assertThrows<IllegalArgumentException> {
+                Location.of(
+                    source = LocationSource.NAVER,
+                    sourceId = "1",
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "",
+                )
+            }
         }
     }
 }

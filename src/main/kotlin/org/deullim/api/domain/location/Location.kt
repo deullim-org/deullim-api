@@ -11,24 +11,35 @@ import org.deullim.api.common.BaseTimeEntity
 
 @Entity
 @Table(name = "locations")
-class Location(
+class Location protected constructor() : BaseTimeEntity() {
     @Id
     @Column(length = 100)
-    val id: String,
+    var id: String = ""
+        protected set
+
     @Embedded
-    val coordinate: Coordinate,
+    lateinit var coordinate: Coordinate
+        protected set
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    val source: LocationSource,
+    lateinit var source: LocationSource
+        protected set
+
     @Column(nullable = false, length = 100)
-    val sourceId: String,
+    var sourceId: String = ""
+        protected set
+
     @Column(nullable = false, length = 200)
-    val name: String,
+    var name: String = ""
+        protected set
+
     // TODO: Member 도메인 구현 후 관계 설정
     // @ManyToOne(fetch = FetchType.LAZY)
     // @JoinColumn(name = "member_id")
-    // val member: Member? = null
-) : BaseTimeEntity() {
+    // lateinit var member: Member
+    //     protected set
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Location) return false
@@ -43,13 +54,16 @@ class Location(
             sourceId: String,
             coordinate: Coordinate,
             name: String,
-        ): Location =
-            Location(
-                id = "${source.name.lowercase()}_$sourceId",
-                coordinate = coordinate,
-                source = source,
-                sourceId = sourceId,
-                name = name,
-            )
+        ): Location {
+            require(sourceId.isNotBlank()) { "sourceId must not be blank" }
+            require(name.isNotBlank()) { "name must not be blank" }
+            return Location().apply {
+                this.id = "${source.name.lowercase()}_$sourceId"
+                this.source = source
+                this.sourceId = sourceId
+                this.coordinate = coordinate
+                this.name = name
+            }
+        }
     }
 }

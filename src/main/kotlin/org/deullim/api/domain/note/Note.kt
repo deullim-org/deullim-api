@@ -18,31 +18,48 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "notes")
-class Note(
+class Note protected constructor() : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    var id: Long = 0L
+        protected set
+
     @Column(nullable = false, length = 200)
-    var title: String,
+    var title: String = ""
+        protected set
+
     @Column(columnDefinition = "TEXT")
-    var content: String? = null,
+    var content: String? = null
+        protected set
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id", nullable = false)
-    var location: Location,
+    lateinit var location: Location
+        protected set
+
     // TODO: Member 도메인 구현 후 관계 설정
     // @Column(nullable = false)
-    // var memberId: Long,
+    // var memberId: Long = 0L
+    //     protected set
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    var status: NoteStatus = NoteStatus.ACTIVE,
+    var status: NoteStatus = NoteStatus.ACTIVE
+        protected set
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    var policy: NotePolicy = NotePolicy.DAY,
+    var policy: NotePolicy = NotePolicy.DAY
+        protected set
+
     @Embedded
-    var radius: Radius = Radius.DEFAULT,
+    var radius: Radius = Radius.DEFAULT
+        protected set
+
     @Column(nullable = false)
-    var activatedAt: LocalDateTime = LocalDateTime.now(),
-) : BaseTimeEntity() {
+    var activatedAt: LocalDateTime = LocalDateTime.now()
+        protected set
+
     fun edit(
         title: String = this.title,
         content: String? = this.content,
@@ -52,6 +69,7 @@ class Note(
         activatedAt: LocalDateTime = this.activatedAt,
     ) {
         check(status != NoteStatus.DELETED) { "Cannot edit a deleted note" }
+        require(title.isNotBlank()) { "title must not be blank" }
         this.title = title
         this.content = content
         this.location = location
@@ -91,4 +109,25 @@ class Note(
     }
 
     override fun hashCode(): Int = javaClass.hashCode()
+
+    companion object {
+        fun create(
+            title: String,
+            location: Location,
+            content: String? = null,
+            policy: NotePolicy = NotePolicy.DAY,
+            radius: Radius = Radius.DEFAULT,
+            activatedAt: LocalDateTime = LocalDateTime.now(),
+        ): Note {
+            require(title.isNotBlank()) { "title must not be blank" }
+            return Note().apply {
+                this.title = title
+                this.location = location
+                this.content = content
+                this.policy = policy
+                this.radius = radius
+                this.activatedAt = activatedAt
+            }
+        }
+    }
 }
