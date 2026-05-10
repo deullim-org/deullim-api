@@ -3,31 +3,35 @@ package org.deullim.api.domain.location
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import org.deullim.api.common.BaseEntity
 
 @Entity
-@Table(name = "locations")
+@Table(
+    name = "locations",
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_locations_external_source",
+            columnNames = ["source", "source_id"],
+        ),
+    ],
+)
 class Location protected constructor() : BaseEntity() {
     @Id
-    @Column(length = 100)
-    var id: String = ""
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0L
+        protected set
+
+    @Embedded
+    lateinit var externalSource: ExternalSource
         protected set
 
     @Embedded
     lateinit var coordinate: Coordinate
-        protected set
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    lateinit var source: LocationSource
-        protected set
-
-    @Column(nullable = false, length = 100)
-    var sourceId: String = ""
         protected set
 
     @Column(nullable = false, length = 200)
@@ -43,10 +47,10 @@ class Location protected constructor() : BaseEntity() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Location) return false
-        return id == other.id
+        return id != 0L && id == other.id
     }
 
-    override fun hashCode(): Int = id.hashCode()
+    override fun hashCode(): Int = javaClass.hashCode()
 
     companion object {
         fun of(
@@ -55,12 +59,9 @@ class Location protected constructor() : BaseEntity() {
             coordinate: Coordinate,
             name: String,
         ): Location {
-            require(sourceId.isNotBlank()) { "sourceId must not be blank" }
             require(name.isNotBlank()) { "name must not be blank" }
             return Location().apply {
-                this.id = "${source.name.lowercase()}_$sourceId"
-                this.source = source
-                this.sourceId = sourceId
+                this.externalSource = ExternalSource(source, sourceId)
                 this.coordinate = coordinate
                 this.name = name
             }

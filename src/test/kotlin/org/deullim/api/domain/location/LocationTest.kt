@@ -8,6 +8,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
+private fun Location.injectId(id: Long) {
+    val field = Location::class.java.getDeclaredField("id")
+    field.isAccessible = true
+    field.set(this, id)
+}
+
 @DisplayName("Location 도메인 테스트")
 class LocationTest {
     @Nested
@@ -83,6 +89,43 @@ class LocationTest {
     }
 
     @Nested
+    @DisplayName("ExternalSource 테스트")
+    inner class ExternalSourceTest {
+        @Test
+        @DisplayName("ExternalSource 생성 시 source와 sourceId가 저장된다")
+        fun `should create external source with source and sourceId`() {
+            val external = ExternalSource(LocationSource.NAVER, "12345")
+
+            assertEquals(LocationSource.NAVER, external.source)
+            assertEquals("12345", external.sourceId)
+        }
+
+        @Test
+        @DisplayName("sourceId가 공백이면 예외가 발생한다")
+        fun `should throw when sourceId is blank`() {
+            assertThrows<IllegalArgumentException> {
+                ExternalSource(LocationSource.NAVER, " ")
+            }
+            assertThrows<IllegalArgumentException> {
+                ExternalSource(LocationSource.NAVER, "")
+            }
+        }
+
+        @Test
+        @DisplayName("같은 source/sourceId를 가지면 동등하다")
+        fun `external sources with same values should be equal`() {
+            val a = ExternalSource(LocationSource.NAVER, "1")
+            val b = ExternalSource(LocationSource.NAVER, "1")
+            val c = ExternalSource(LocationSource.USER, "1")
+            val d = ExternalSource(LocationSource.NAVER, "2")
+
+            assertEquals(a, b)
+            assertNotEquals(a, c)
+            assertNotEquals(a, d)
+        }
+    }
+
+    @Nested
     @DisplayName("Location 엔티티 테스트")
     inner class LocationEntityTest {
         @Test
@@ -101,11 +144,10 @@ class LocationTest {
                     name = name,
                 )
 
-            assertEquals("naver_12345", location.id)
+            assertEquals(ExternalSource(source, sourceId), location.externalSource)
             assertEquals(coordinate, location.coordinate)
-            assertEquals(source, location.source)
-            assertEquals(sourceId, location.sourceId)
             assertEquals(name, location.name)
+            assertEquals(0L, location.id)
         }
 
         @Test
@@ -119,8 +161,8 @@ class LocationTest {
                     name = "사용자 지정 위치",
                 )
 
-            assertEquals(LocationSource.USER, location.source)
-            assertEquals("user_custom_location", location.id)
+            assertEquals(LocationSource.USER, location.externalSource.source)
+            assertEquals("custom_location", location.externalSource.sourceId)
         }
 
         @Test
@@ -147,42 +189,48 @@ class LocationTest {
         }
 
         @Test
-        @DisplayName("Location.of 팩토리는 source와 sourceId로 id를 생성한다")
-        fun `factory should compose id from source and sourceId`() {
-            val location =
-                Location.of(
-                    source = LocationSource.NAVER,
-                    sourceId = "12345",
-                    coordinate = Coordinate(37.5665, 126.9780),
-                    name = "서울시청",
-                )
-
-            assertEquals("naver_12345", location.id)
-            assertEquals(LocationSource.NAVER, location.source)
-            assertEquals("12345", location.sourceId)
-        }
-
-        @Test
-        @DisplayName("같은 source/sourceId로 만든 Location은 동등하다")
-        fun `locations with same composed id should be equal`() {
-            val coord = Coordinate(37.5665, 126.9780)
+        @DisplayName("같은 id를 가진 영속 Location은 동등하다")
+        fun `persisted locations with same id should be equal`() {
             val a =
                 Location.of(
                     source = LocationSource.NAVER,
                     sourceId = "1",
-                    coordinate = coord,
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "A",
+                )
+            val b =
+                Location.of(
+                    source = LocationSource.NAVER,
+                    sourceId = "2",
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "B",
+                )
+            a.injectId(1L)
+            b.injectId(1L)
+
+            assertEquals(a, b)
+            assertEquals(a.hashCode(), b.hashCode())
+        }
+
+        @Test
+        @DisplayName("transient(id=0) Location 두 개는 동일 인스턴스가 아니면 동등하지 않다")
+        fun `transient locations are not equal unless same instance`() {
+            val a =
+                Location.of(
+                    source = LocationSource.NAVER,
+                    sourceId = "1",
+                    coordinate = Coordinate(37.5665, 126.9780),
                     name = "A",
                 )
             val b =
                 Location.of(
                     source = LocationSource.NAVER,
                     sourceId = "1",
-                    coordinate = coord,
-                    name = "B",
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "A",
                 )
 
-            assertEquals(a, b)
-            assertEquals(a.hashCode(), b.hashCode())
+            assertNotEquals(a, b)
         }
 
         @Test
