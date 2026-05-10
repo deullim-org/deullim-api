@@ -1,8 +1,9 @@
 package org.deullim.api.domain.note
 
 import org.deullim.api.domain.location.Coordinate
+import org.deullim.api.domain.location.ExternalLocation
+import org.deullim.api.domain.location.ExternalProvider
 import org.deullim.api.domain.location.Location
-import org.deullim.api.domain.location.LocationSource
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -13,10 +14,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
-private fun testLocation(sourceId: String = "test"): Location =
-    Location.of(
-        source = LocationSource.NAVER,
-        sourceId = sourceId,
+private fun testLocation(externalId: String = "test"): Location =
+    ExternalLocation.of(
+        provider = ExternalProvider.NAVER,
+        externalId = externalId,
         coordinate = Coordinate(37.5665, 126.9780),
         name = "테스트 위치",
     )

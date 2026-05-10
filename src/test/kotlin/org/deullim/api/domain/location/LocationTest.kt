@@ -5,10 +5,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-private fun Location.injectId(id: Long) {
+private fun ExternalLocation.injectId(id: Long) {
     val field = Location::class.java.getDeclaredField("id")
     field.isAccessible = true
     field.set(this, id)
@@ -92,93 +93,104 @@ class LocationTest {
     @DisplayName("ExternalSource 테스트")
     inner class ExternalSourceTest {
         @Test
-        @DisplayName("ExternalSource 생성 시 source와 sourceId가 저장된다")
-        fun `should create external source with source and sourceId`() {
-            val external = ExternalSource(LocationSource.NAVER, "12345")
+        @DisplayName("ExternalSource 생성 시 provider와 externalId가 저장된다")
+        fun `should create external source with provider and externalId`() {
+            val external = ExternalSource(ExternalProvider.NAVER, "12345")
 
-            assertEquals(LocationSource.NAVER, external.source)
-            assertEquals("12345", external.sourceId)
+            assertEquals(ExternalProvider.NAVER, external.provider)
+            assertEquals("12345", external.externalId)
         }
 
         @Test
-        @DisplayName("sourceId가 공백이면 예외가 발생한다")
-        fun `should throw when sourceId is blank`() {
+        @DisplayName("externalId가 공백이면 예외가 발생한다")
+        fun `should throw when externalId is blank`() {
             assertThrows<IllegalArgumentException> {
-                ExternalSource(LocationSource.NAVER, " ")
+                ExternalSource(ExternalProvider.NAVER, " ")
             }
             assertThrows<IllegalArgumentException> {
-                ExternalSource(LocationSource.NAVER, "")
+                ExternalSource(ExternalProvider.NAVER, "")
             }
         }
 
         @Test
-        @DisplayName("같은 source/sourceId를 가지면 동등하다")
+        @DisplayName("같은 provider/externalId를 가지면 동등하다")
         fun `external sources with same values should be equal`() {
-            val a = ExternalSource(LocationSource.NAVER, "1")
-            val b = ExternalSource(LocationSource.NAVER, "1")
-            val c = ExternalSource(LocationSource.USER, "1")
-            val d = ExternalSource(LocationSource.NAVER, "2")
+            val a = ExternalSource(ExternalProvider.NAVER, "1")
+            val b = ExternalSource(ExternalProvider.NAVER, "1")
+            val c = ExternalSource(ExternalProvider.NAVER, "2")
 
             assertEquals(a, b)
             assertNotEquals(a, c)
-            assertNotEquals(a, d)
         }
     }
 
     @Nested
-    @DisplayName("Location 엔티티 테스트")
-    inner class LocationEntityTest {
+    @DisplayName("ExternalLocation 엔티티 테스트")
+    inner class ExternalLocationTest {
         @Test
-        @DisplayName("Location.of로 모든 필드를 지정해 생성할 수 있다")
-        fun `should create location with all fields via factory`() {
+        @DisplayName("ExternalLocation.of로 모든 필드를 지정해 생성할 수 있다")
+        fun `should create external location with all fields via factory`() {
             val coordinate = Coordinate(37.5665, 126.9780)
-            val source = LocationSource.NAVER
-            val sourceId = "12345"
             val name = "서울시청"
+            val externalSource = ExternalSource(ExternalProvider.NAVER, "12345")
 
             val location =
-                Location.of(
-                    source = source,
-                    sourceId = sourceId,
+                ExternalLocation.of(
+                    externalSource = externalSource,
                     coordinate = coordinate,
                     name = name,
                 )
 
-            assertEquals(ExternalSource(source, sourceId), location.externalSource)
+            assertEquals(externalSource, location.externalSource)
             assertEquals(coordinate, location.coordinate)
             assertEquals(name, location.name)
             assertEquals(0L, location.id)
         }
 
         @Test
-        @DisplayName("USER 소스로 Location을 생성할 수 있다")
-        fun `should create location with USER source`() {
+        @DisplayName("provider/externalId 오버로드 팩토리도 동일하게 동작한다")
+        fun `provider externalId overload factory should work the same`() {
             val location =
-                Location.of(
-                    source = LocationSource.USER,
-                    sourceId = "custom_location",
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = "12345",
                     coordinate = Coordinate(37.5665, 126.9780),
-                    name = "사용자 지정 위치",
+                    name = "서울시청",
                 )
 
-            assertEquals(LocationSource.USER, location.externalSource.source)
-            assertEquals("custom_location", location.externalSource.sourceId)
+            assertEquals(ExternalProvider.NAVER, location.externalSource.provider)
+            assertEquals("12345", location.externalSource.externalId)
         }
 
         @Test
-        @DisplayName("Location의 좌표를 통해 다른 Location과의 거리를 계산할 수 있다")
+        @DisplayName("ExternalLocation은 모든 사용자에게 공개된다")
+        fun `external location should be visible to all members`() {
+            val location =
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = "1",
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "서울시청",
+                )
+
+            assertTrue(location.isVisibleTo(memberId = 1L))
+            assertTrue(location.isVisibleTo(memberId = 999L))
+        }
+
+        @Test
+        @DisplayName("ExternalLocation의 좌표를 통해 다른 Location과의 거리를 계산할 수 있다")
         fun `should calculate distance between two locations`() {
             val location1 =
-                Location.of(
-                    source = LocationSource.NAVER,
-                    sourceId = "1",
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "서울시청",
                 )
             val location2 =
-                Location.of(
-                    source = LocationSource.NAVER,
-                    sourceId = "2",
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = "2",
                     coordinate = Coordinate(37.4979, 127.0276),
                     name = "강남역",
                 )
@@ -189,57 +201,57 @@ class LocationTest {
         }
 
         @Test
-        @DisplayName("같은 id를 가진 영속 Location은 동등하다")
-        fun `persisted locations with same id should be equal`() {
+        @DisplayName("같은 id를 가진 영속 ExternalLocation은 동등하다")
+        fun `persisted external locations with same id should be equal`() {
             val a =
-                Location.of(
-                    source = LocationSource.NAVER,
-                    sourceId = "1",
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "A",
                 )
             val b =
-                Location.of(
-                    source = LocationSource.NAVER,
-                    sourceId = "2",
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = "2",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "B",
                 )
             a.injectId(1L)
             b.injectId(1L)
 
-            assertEquals(a, b)
+            assertEquals<Location>(a, b)
             assertEquals(a.hashCode(), b.hashCode())
         }
 
         @Test
-        @DisplayName("transient(id=0) Location 두 개는 동일 인스턴스가 아니면 동등하지 않다")
-        fun `transient locations are not equal unless same instance`() {
+        @DisplayName("transient(id=0) ExternalLocation 두 개는 동일 인스턴스가 아니면 동등하지 않다")
+        fun `transient external locations are not equal unless same instance`() {
             val a =
-                Location.of(
-                    source = LocationSource.NAVER,
-                    sourceId = "1",
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "A",
                 )
             val b =
-                Location.of(
-                    source = LocationSource.NAVER,
-                    sourceId = "1",
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "A",
                 )
 
-            assertNotEquals(a, b)
+            assertFalse(a == b)
         }
 
         @Test
-        @DisplayName("sourceId가 공백이면 예외가 발생한다")
-        fun `should throw when sourceId is blank`() {
+        @DisplayName("externalId가 공백이면 예외가 발생한다")
+        fun `should throw when externalId is blank`() {
             assertThrows<IllegalArgumentException> {
-                Location.of(
-                    source = LocationSource.NAVER,
-                    sourceId = " ",
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = " ",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "이름",
                 )
@@ -250,9 +262,9 @@ class LocationTest {
         @DisplayName("name이 공백이면 예외가 발생한다")
         fun `should throw when name is blank`() {
             assertThrows<IllegalArgumentException> {
-                Location.of(
-                    source = LocationSource.NAVER,
-                    sourceId = "1",
+                ExternalLocation.of(
+                    provider = ExternalProvider.NAVER,
+                    externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "",
                 )

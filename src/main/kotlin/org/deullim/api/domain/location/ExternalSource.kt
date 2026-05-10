@@ -8,12 +8,12 @@ import jakarta.persistence.Enumerated
 @Embeddable
 data class ExternalSource(
     @Enumerated(EnumType.STRING)
-    @Column(name = "source", nullable = false, length = 20)
-    val source: LocationSource,
-    @Column(name = "source_id", nullable = false, length = 100)
-    val sourceId: String,
+    @Column(name = "provider", length = 20)
+    val provider: ExternalProvider,
+    @Column(name = "external_id", length = 100)
+    val externalId: String,
 ) {
     init {
-        require(sourceId.isNotBlank()) { "sourceId must not be blank" }
+        require(externalId.isNotBlank()) { "externalId must not be blank" }
     }
 }

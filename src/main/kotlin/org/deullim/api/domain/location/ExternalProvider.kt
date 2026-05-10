@@ -1,6 +1,5 @@
 package org.deullim.api.domain.location
 
-enum class LocationSource {
-    USER,
+enum class ExternalProvider {
     NAVER,
 }
