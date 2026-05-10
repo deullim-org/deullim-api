@@ -12,13 +12,14 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.deullim.api.common.BaseTimeEntity
+import org.deullim.api.common.BaseEntity
 import org.deullim.api.domain.location.Location
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.ZoneOffset
 
 @Entity
 @Table(name = "notes")
-class Note protected constructor() : BaseTimeEntity() {
+class Note protected constructor() : BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0L
@@ -57,7 +58,7 @@ class Note protected constructor() : BaseTimeEntity() {
         protected set
 
     @Column(nullable = false)
-    var activatedAt: LocalDateTime = LocalDateTime.now()
+    var activatedAt: Instant = Instant.now()
         protected set
 
     fun edit(
@@ -66,7 +67,7 @@ class Note protected constructor() : BaseTimeEntity() {
         location: Location = this.location,
         policy: NotePolicy = this.policy,
         radius: Radius = this.radius,
-        activatedAt: LocalDateTime = this.activatedAt,
+        activatedAt: Instant = this.activatedAt,
     ) {
         check(status != NoteStatus.DELETED) { "Cannot edit a deleted note" }
         require(title.isNotBlank()) { "title must not be blank" }
@@ -92,13 +93,14 @@ class Note protected constructor() : BaseTimeEntity() {
         this.status = NoteStatus.DELETED
     }
 
-    fun rescheduleAfterNotification(now: LocalDateTime = LocalDateTime.now()) {
+    fun rescheduleAfterNotification(now: Instant = Instant.now()) {
         check(status == NoteStatus.ACTIVE) { "Cannot reschedule a non-active note" }
+        val nowUtc = now.atOffset(ZoneOffset.UTC)
         when (policy) {
             NotePolicy.NONE -> status = NoteStatus.INACTIVE
-            NotePolicy.DAY -> activatedAt = now.plusDays(1)
-            NotePolicy.WEEK -> activatedAt = now.plusWeeks(1)
-            NotePolicy.MONTH -> activatedAt = now.plusMonths(1)
+            NotePolicy.DAY -> activatedAt = nowUtc.plusDays(1).toInstant()
+            NotePolicy.WEEK -> activatedAt = nowUtc.plusWeeks(1).toInstant()
+            NotePolicy.MONTH -> activatedAt = nowUtc.plusMonths(1).toInstant()
         }
     }
 
@@ -117,7 +119,7 @@ class Note protected constructor() : BaseTimeEntity() {
             content: String? = null,
             policy: NotePolicy = NotePolicy.DAY,
             radius: Radius = Radius.DEFAULT,
-            activatedAt: LocalDateTime = LocalDateTime.now(),
+            activatedAt: Instant = Instant.now(),
         ): Note {
             require(title.isNotBlank()) { "title must not be blank" }
             return Note().apply {

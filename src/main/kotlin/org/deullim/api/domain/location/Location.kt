@@ -7,11 +7,11 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.deullim.api.common.BaseTimeEntity
+import org.deullim.api.common.BaseEntity
 
 @Entity
 @Table(name = "locations")
-class Location protected constructor() : BaseTimeEntity() {
+class Location protected constructor() : BaseEntity() {
     @Id
     @Column(length = 100)
     var id: String = ""

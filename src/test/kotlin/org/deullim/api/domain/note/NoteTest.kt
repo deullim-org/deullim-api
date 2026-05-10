@@ -7,7 +7,8 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.ZoneOffset
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -120,7 +121,7 @@ class NoteTest {
             val location = testLocation("loc_456")
             val policy = NotePolicy.WEEK
             val radius = Radius(500)
-            val activatedAt = LocalDateTime.of(2025, 1, 1, 12, 0)
+            val activatedAt = Instant.parse("2025-01-01T12:00:00Z")
 
             val note =
                 Note.create(
@@ -186,7 +187,7 @@ class NoteTest {
         fun `should edit multiple fields at once`() {
             val note = Note.create(title = "제목", location = testLocation("loc_old"))
             val newLocation = testLocation("loc_new")
-            val newActivatedAt = LocalDateTime.of(2025, 6, 15, 10, 0)
+            val newActivatedAt = Instant.parse("2025-06-15T10:00:00Z")
 
             note.edit(
                 title = "새 제목",
@@ -298,7 +299,7 @@ class NoteTest {
     @Nested
     @DisplayName("rescheduleAfterNotification 테스트")
     inner class RescheduleTest {
-        private val baseTime = LocalDateTime.of(2026, 4, 27, 12, 0)
+        private val baseTime: Instant = Instant.parse("2026-04-27T12:00:00Z")
 
         @Test
         @DisplayName("NONE 정책은 알림 후 INACTIVE로 전환된다")
@@ -331,7 +332,7 @@ class NoteTest {
             note.rescheduleAfterNotification(now = baseTime)
 
             assertEquals(NoteStatus.ACTIVE, note.status)
-            assertEquals(baseTime.plusDays(1), note.activatedAt)
+            assertEquals(baseTime.atOffset(ZoneOffset.UTC).plusDays(1).toInstant(), note.activatedAt)
         }
 
         @Test
@@ -347,7 +348,7 @@ class NoteTest {
 
             note.rescheduleAfterNotification(now = baseTime)
 
-            assertEquals(baseTime.plusWeeks(1), note.activatedAt)
+            assertEquals(baseTime.atOffset(ZoneOffset.UTC).plusWeeks(1).toInstant(), note.activatedAt)
         }
 
         @Test
@@ -363,7 +364,7 @@ class NoteTest {
 
             note.rescheduleAfterNotification(now = baseTime)
 
-            assertEquals(baseTime.plusMonths(1), note.activatedAt)
+            assertEquals(baseTime.atOffset(ZoneOffset.UTC).plusMonths(1).toInstant(), note.activatedAt)
         }
 
         @Test
