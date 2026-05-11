@@ -271,4 +271,87 @@ class LocationTest {
             }
         }
     }
+
+    @Nested
+    @DisplayName("UserLocation 엔티티 테스트")
+    inner class UserLocationTest {
+        @Test
+        @DisplayName("UserLocation.of로 모든 필드를 지정해 생성할 수 있다")
+        fun `should create user location with all fields via factory`() {
+            val coordinate = Coordinate(37.5665, 126.9780)
+            val memberId = 42L
+            val name = "할머니댁"
+
+            val location =
+                UserLocation.of(
+                    memberId = memberId,
+                    coordinate = coordinate,
+                    name = name,
+                )
+
+            assertEquals(memberId, location.memberId)
+            assertEquals(coordinate, location.coordinate)
+            assertEquals(name, location.name)
+            assertEquals(0L, location.id)
+        }
+
+        @Test
+        @DisplayName("UserLocation은 소유한 멤버에게만 공개된다")
+        fun `user location should be visible only to owner`() {
+            val location =
+                UserLocation.of(
+                    memberId = 1L,
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "내 위치",
+                )
+
+            assertTrue(location.isVisibleTo(memberId = 1L))
+            assertFalse(location.isVisibleTo(memberId = 2L))
+        }
+
+        @Test
+        @DisplayName("memberId가 0 이하이면 예외가 발생한다")
+        fun `should throw when memberId is non-positive`() {
+            assertThrows<IllegalArgumentException> {
+                UserLocation.of(
+                    memberId = 0L,
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "이름",
+                )
+            }
+            assertThrows<IllegalArgumentException> {
+                UserLocation.of(
+                    memberId = -1L,
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "이름",
+                )
+            }
+        }
+
+        @Test
+        @DisplayName("name이 공백이면 예외가 발생한다")
+        fun `should throw when name is blank`() {
+            assertThrows<IllegalArgumentException> {
+                UserLocation.of(
+                    memberId = 1L,
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "",
+                )
+            }
+        }
+
+        @Test
+        @DisplayName("Location 타입으로도 polymorphic하게 다룰 수 있다")
+        fun `should be usable polymorphically as Location`() {
+            val location: Location =
+                UserLocation.of(
+                    memberId = 1L,
+                    coordinate = Coordinate(37.5665, 126.9780),
+                    name = "내 위치",
+                )
+
+            assertTrue(location.isVisibleTo(memberId = 1L))
+            assertFalse(location.isVisibleTo(memberId = 2L))
+        }
+    }
 }
