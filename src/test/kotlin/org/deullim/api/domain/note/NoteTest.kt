@@ -237,6 +237,31 @@ class NoteTest {
         }
 
         @Test
+        @DisplayName("이미 ACTIVE인 Note를 다시 activate하면 예외가 발생한다")
+        fun `should throw when activating already-active note`() {
+            val note = Note.create(title = "제목", location = testLocation())
+
+            val exception =
+                assertThrows<IllegalStateException> {
+                    note.activate()
+                }
+            assertEquals("Note is already active", exception.message)
+        }
+
+        @Test
+        @DisplayName("이미 INACTIVE인 Note를 다시 deactivate하면 예외가 발생한다")
+        fun `should throw when deactivating already-inactive note`() {
+            val note = Note.create(title = "제목", location = testLocation())
+            note.deactivate()
+
+            val exception =
+                assertThrows<IllegalStateException> {
+                    note.deactivate()
+                }
+            assertEquals("Note is already inactive", exception.message)
+        }
+
+        @Test
         @DisplayName("Note를 삭제할 수 있다")
         fun `should delete note`() {
             val note = Note.create(title = "제목", location = testLocation())
@@ -286,19 +311,21 @@ class NoteTest {
         }
 
         @Test
-        @DisplayName("delete는 멱등성이 있다")
-        fun `delete should be idempotent`() {
+        @DisplayName("이미 DELETED된 Note를 다시 delete하면 예외가 발생한다")
+        fun `should throw when deleting already-deleted note`() {
             val note = Note.create(title = "제목", location = testLocation())
-
-            note.delete()
             note.delete()
 
-            assertEquals(NoteStatus.DELETED, note.status)
+            val exception =
+                assertThrows<IllegalStateException> {
+                    note.delete()
+                }
+            assertEquals("Note is already deleted", exception.message)
         }
     }
 
     @Nested
-    @DisplayName("rescheduleAfterNotification 테스트")
+    @DisplayName("reschedule 테스트")
     inner class RescheduleTest {
         private val baseTime: Instant = Instant.parse("2026-04-27T12:00:00Z")
 
@@ -313,7 +340,7 @@ class NoteTest {
                     activatedAt = baseTime,
                 )
 
-            note.rescheduleAfterNotification(now = baseTime)
+            note.reschedule(now = baseTime)
 
             assertEquals(NoteStatus.INACTIVE, note.status)
             assertEquals(baseTime, note.activatedAt)
@@ -330,7 +357,7 @@ class NoteTest {
                     activatedAt = baseTime,
                 )
 
-            note.rescheduleAfterNotification(now = baseTime)
+            note.reschedule(now = baseTime)
 
             assertEquals(NoteStatus.ACTIVE, note.status)
             assertEquals(baseTime.atOffset(ZoneOffset.UTC).plusDays(1).toInstant(), note.activatedAt)
@@ -347,7 +374,7 @@ class NoteTest {
                     activatedAt = baseTime,
                 )
 
-            note.rescheduleAfterNotification(now = baseTime)
+            note.reschedule(now = baseTime)
 
             assertEquals(baseTime.atOffset(ZoneOffset.UTC).plusWeeks(1).toInstant(), note.activatedAt)
         }
@@ -363,7 +390,7 @@ class NoteTest {
                     activatedAt = baseTime,
                 )
 
-            note.rescheduleAfterNotification(now = baseTime)
+            note.reschedule(now = baseTime)
 
             assertEquals(baseTime.atOffset(ZoneOffset.UTC).plusMonths(1).toInstant(), note.activatedAt)
         }
@@ -376,7 +403,7 @@ class NoteTest {
 
             val exception =
                 assertThrows<IllegalStateException> {
-                    note.rescheduleAfterNotification()
+                    note.reschedule()
                 }
             assertEquals("Cannot reschedule a non-active note", exception.message)
         }
@@ -389,7 +416,7 @@ class NoteTest {
 
             val exception =
                 assertThrows<IllegalStateException> {
-                    note.rescheduleAfterNotification()
+                    note.reschedule()
                 }
             assertEquals("Cannot reschedule a non-active note", exception.message)
         }

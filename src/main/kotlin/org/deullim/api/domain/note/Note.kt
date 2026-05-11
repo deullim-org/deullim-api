@@ -81,19 +81,22 @@ class Note protected constructor() : BaseEntity() {
 
     fun activate() {
         check(status != NoteStatus.DELETED) { "Cannot activate a deleted note" }
+        check(status != NoteStatus.ACTIVE) { "Note is already active" }
         this.status = NoteStatus.ACTIVE
     }
 
     fun deactivate() {
         check(status != NoteStatus.DELETED) { "Cannot deactivate a deleted note" }
+        check(status != NoteStatus.INACTIVE) { "Note is already inactive" }
         this.status = NoteStatus.INACTIVE
     }
 
     fun delete() {
+        check(status != NoteStatus.DELETED) { "Note is already deleted" }
         this.status = NoteStatus.DELETED
     }
 
-    fun rescheduleAfterNotification(now: Instant = Instant.now()) {
+    fun reschedule(now: Instant = Instant.now()) {
         check(status == NoteStatus.ACTIVE) { "Cannot reschedule a non-active note" }
         val nowUtc = now.atOffset(ZoneOffset.UTC)
         when (policy) {
