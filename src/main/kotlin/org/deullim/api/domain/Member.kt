@@ -13,7 +13,7 @@ import org.deullim.api.domain.converter.DevicesConverter
 
 @Entity
 @Table(name = "members")
-class Member protected constructor() : Base() { // ✅ private -> protected
+class Member protected constructor() : Base() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
