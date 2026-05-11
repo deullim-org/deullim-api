@@ -8,10 +8,10 @@ import org.deullim.api.domain.Device
 import kotlin.collections.mutableListOf
 
 @Converter
-class DevicesConverter : AttributeConverter<MutableList<Device>, String> {
+class DevicesConverter : AttributeConverter<List<Device>, String> {
     private val objectMapper = jacksonObjectMapper()
 
-    override fun convertToDatabaseColumn(attribute: MutableList<Device>?): String {
+    override fun convertToDatabaseColumn(attribute: List<Device>?): String {
         return objectMapper.writeValueAsString(attribute ?: mutableListOf<Device>())
     }
 
