@@ -8,8 +8,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 class PlaceTest {
-    private fun newMember(): Member =
-        Member.create("nick", Device(token = "token", os = "ios"), SourceType.GUEST)
+    private fun newMember(): Member = Member.create("nick", Device(token = "token", os = "ios"), SourceType.GUEST)
 
     @Test
     @DisplayName("Place를 생성한다")

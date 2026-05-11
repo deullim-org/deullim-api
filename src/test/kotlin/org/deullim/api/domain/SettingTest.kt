@@ -6,8 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class SettingTest {
-    private fun newMember(): Member =
-        Member.create("nick", Device(token = "token", os = "ios"), SourceType.GUEST)
+    private fun newMember(): Member = Member.create("nick", Device(token = "token", os = "ios"), SourceType.GUEST)
 
     @Test
     @DisplayName("radius가 null이면 기본값으로 생성된다")
