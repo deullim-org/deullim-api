@@ -12,8 +12,6 @@ import java.time.Instant
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener::class)
 abstract class Base(
-    @Version
-    var version: Long = 0,
     @CreatedDate
     @Column(updatable = false)
     var createdAt: Instant? = null,
