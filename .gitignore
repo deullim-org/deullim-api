@@ -5,8 +5,6 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-CLAUDE.md
-.claude
 
 ### STS ###
 .apt_generated
@@ -41,3 +39,13 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Dotfiles ###
+.*
+!.gitignore
+!.gitattributes
+!.dockerignore
+!.github
+!.claude
+!CLAUDE.md
+.claude/settings.local.json
