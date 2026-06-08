@@ -7,6 +7,7 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private fun ExternalLocation.injectId(id: Long) {
@@ -128,14 +129,14 @@ class LocationTest {
     @DisplayName("ExternalLocation 엔티티 테스트")
     inner class ExternalLocationTest {
         @Test
-        @DisplayName("ExternalLocation.of로 모든 필드를 지정해 생성할 수 있다")
+        @DisplayName("ExternalLocation.create로 모든 필드를 지정해 생성할 수 있다")
         fun `should create external location with all fields via factory`() {
             val coordinate = Coordinate(37.5665, 126.9780)
             val name = "서울시청"
             val externalSource = ExternalSource(ExternalProvider.NAVER, "12345")
 
             val location =
-                ExternalLocation.of(
+                ExternalLocation.create(
                     externalSource = externalSource,
                     coordinate = coordinate,
                     name = name,
@@ -144,14 +145,14 @@ class LocationTest {
             assertEquals(externalSource, location.externalSource)
             assertEquals(coordinate, location.coordinate)
             assertEquals(name, location.name)
-            assertEquals(0L, location.id)
+            assertNull(location.id)
         }
 
         @Test
         @DisplayName("provider/externalId 오버로드 팩토리도 동일하게 동작한다")
         fun `provider externalId overload factory should work the same`() {
             val location =
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = "12345",
                     coordinate = Coordinate(37.5665, 126.9780),
@@ -166,7 +167,7 @@ class LocationTest {
         @DisplayName("ExternalLocation은 모든 사용자에게 공개된다")
         fun `external location should be visible to all members`() {
             val location =
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
@@ -181,14 +182,14 @@ class LocationTest {
         @DisplayName("ExternalLocation의 좌표를 통해 다른 Location과의 거리를 계산할 수 있다")
         fun `should calculate distance between two locations`() {
             val location1 =
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "서울시청",
                 )
             val location2 =
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = "2",
                     coordinate = Coordinate(37.4979, 127.0276),
@@ -204,14 +205,14 @@ class LocationTest {
         @DisplayName("같은 id를 가진 영속 ExternalLocation은 동등하다")
         fun `persisted external locations with same id should be equal`() {
             val a =
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "A",
                 )
             val b =
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = "2",
                     coordinate = Coordinate(37.5665, 126.9780),
@@ -225,17 +226,17 @@ class LocationTest {
         }
 
         @Test
-        @DisplayName("transient(id=0) ExternalLocation 두 개는 동일 인스턴스가 아니면 동등하지 않다")
+        @DisplayName("transient(id=null) ExternalLocation 두 개는 동일 인스턴스가 아니면 동등하지 않다")
         fun `transient external locations are not equal unless same instance`() {
             val a =
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "A",
                 )
             val b =
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
@@ -249,7 +250,7 @@ class LocationTest {
         @DisplayName("externalId가 공백이면 예외가 발생한다")
         fun `should throw when externalId is blank`() {
             assertThrows<IllegalArgumentException> {
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = " ",
                     coordinate = Coordinate(37.5665, 126.9780),
@@ -262,7 +263,7 @@ class LocationTest {
         @DisplayName("name이 공백이면 예외가 발생한다")
         fun `should throw when name is blank`() {
             assertThrows<IllegalArgumentException> {
-                ExternalLocation.of(
+                ExternalLocation.create(
                     provider = ExternalProvider.NAVER,
                     externalId = "1",
                     coordinate = Coordinate(37.5665, 126.9780),
@@ -276,14 +277,14 @@ class LocationTest {
     @DisplayName("UserLocation 엔티티 테스트")
     inner class UserLocationTest {
         @Test
-        @DisplayName("UserLocation.of로 모든 필드를 지정해 생성할 수 있다")
+        @DisplayName("UserLocation.create로 모든 필드를 지정해 생성할 수 있다")
         fun `should create user location with all fields via factory`() {
             val coordinate = Coordinate(37.5665, 126.9780)
             val memberId = 42L
             val name = "할머니댁"
 
             val location =
-                UserLocation.of(
+                UserLocation.create(
                     memberId = memberId,
                     coordinate = coordinate,
                     name = name,
@@ -292,14 +293,14 @@ class LocationTest {
             assertEquals(memberId, location.memberId)
             assertEquals(coordinate, location.coordinate)
             assertEquals(name, location.name)
-            assertEquals(0L, location.id)
+            assertNull(location.id)
         }
 
         @Test
         @DisplayName("UserLocation은 소유한 멤버에게만 공개된다")
         fun `user location should be visible only to owner`() {
             val location =
-                UserLocation.of(
+                UserLocation.create(
                     memberId = 1L,
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "내 위치",
@@ -313,14 +314,14 @@ class LocationTest {
         @DisplayName("memberId가 0 이하이면 예외가 발생한다")
         fun `should throw when memberId is non-positive`() {
             assertThrows<IllegalArgumentException> {
-                UserLocation.of(
+                UserLocation.create(
                     memberId = 0L,
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "이름",
                 )
             }
             assertThrows<IllegalArgumentException> {
-                UserLocation.of(
+                UserLocation.create(
                     memberId = -1L,
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "이름",
@@ -332,7 +333,7 @@ class LocationTest {
         @DisplayName("name이 공백이면 예외가 발생한다")
         fun `should throw when name is blank`() {
             assertThrows<IllegalArgumentException> {
-                UserLocation.of(
+                UserLocation.create(
                     memberId = 1L,
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "",
@@ -344,7 +345,7 @@ class LocationTest {
         @DisplayName("Location 타입으로도 polymorphic하게 다룰 수 있다")
         fun `should be usable polymorphically as Location`() {
             val location: Location =
-                UserLocation.of(
+                UserLocation.create(
                     memberId = 1L,
                     coordinate = Coordinate(37.5665, 126.9780),
                     name = "내 위치",

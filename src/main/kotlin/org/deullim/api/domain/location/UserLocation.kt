@@ -14,7 +14,7 @@ class UserLocation protected constructor() : Location() {
     override fun isVisibleTo(memberId: Long): Boolean = this.memberId == memberId
 
     companion object {
-        fun of(
+        fun create(
             memberId: Long,
             coordinate: Coordinate,
             name: String,

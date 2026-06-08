@@ -14,7 +14,7 @@ class ExternalLocation protected constructor() : Location() {
     override fun isVisibleTo(memberId: Long): Boolean = true
 
     companion object {
-        fun of(
+        fun create(
             externalSource: ExternalSource,
             coordinate: Coordinate,
             name: String,
@@ -27,11 +27,11 @@ class ExternalLocation protected constructor() : Location() {
             }
         }
 
-        fun of(
+        fun create(
             provider: ExternalProvider,
             externalId: String,
             coordinate: Coordinate,
             name: String,
-        ): ExternalLocation = of(ExternalSource(provider, externalId), coordinate, name)
+        ): ExternalLocation = create(ExternalSource(provider, externalId), coordinate, name)
     }
 }

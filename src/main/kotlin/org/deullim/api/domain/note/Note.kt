@@ -12,17 +12,17 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.deullim.api.common.BaseEntity
+import org.deullim.api.domain.Base
 import org.deullim.api.domain.location.Location
 import java.time.Instant
 import java.time.ZoneOffset
 
 @Entity
 @Table(name = "notes")
-class Note protected constructor() : BaseEntity() {
+class Note protected constructor() : Base() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0L
+    var id: Long? = null
         protected set
 
     @Column(nullable = false, length = 200)
@@ -110,7 +110,7 @@ class Note protected constructor() : BaseEntity() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Note) return false
-        return id != 0L && id == other.id
+        return id != null && id == other.id
     }
 
     override fun hashCode(): Int = javaClass.hashCode()

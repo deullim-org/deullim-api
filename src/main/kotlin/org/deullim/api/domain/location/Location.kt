@@ -11,7 +11,7 @@ import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
-import org.deullim.api.common.BaseEntity
+import org.deullim.api.domain.Base
 
 @Entity
 @Table(
@@ -25,10 +25,10 @@ import org.deullim.api.common.BaseEntity
 )
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "source_type", length = 20)
-abstract class Location protected constructor() : BaseEntity() {
+abstract class Location protected constructor() : Base() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0L
+    var id: Long? = null
         protected set
 
     @Embedded
@@ -44,8 +44,8 @@ abstract class Location protected constructor() : BaseEntity() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Location) return false
-        return id != 0L && id == other.id
+        return id != null && id == other.id
     }
 
-    override fun hashCode(): Int = id.hashCode()
+    override fun hashCode(): Int = javaClass.hashCode()
 }

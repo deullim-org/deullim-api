@@ -15,7 +15,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
 private fun testLocation(externalId: String = "test"): Location =
-    ExternalLocation.of(
+    ExternalLocation.create(
         provider = ExternalProvider.NAVER,
         externalId = externalId,
         coordinate = Coordinate(37.5665, 126.9780),
@@ -438,7 +438,7 @@ class NoteTest {
         }
 
         @Test
-        @DisplayName("transient(id=0) Note 두 개는 동일 인스턴스가 아니면 동등하지 않다")
+        @DisplayName("transient(id=null) Note 두 개는 동일 인스턴스가 아니면 동등하지 않다")
         fun `transient notes are not equal unless same instance`() {
             val note1 = Note.create(title = "A", location = testLocation())
             val note2 = Note.create(title = "A", location = testLocation())
