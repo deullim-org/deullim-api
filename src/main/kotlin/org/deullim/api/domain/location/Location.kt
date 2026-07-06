@@ -10,20 +10,11 @@ import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 import org.deullim.api.domain.Base
 
 @Entity
-@Table(
-    name = "locations",
-    uniqueConstraints = [
-        UniqueConstraint(
-            name = "uk_locations_external_source",
-            columnNames = ["provider", "external_id"],
-        ),
-    ],
-)
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@Table(name = "locations")
+@Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "source_type", length = 20)
 abstract class Location protected constructor() : Base() {
     @Id

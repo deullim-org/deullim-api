@@ -3,11 +3,13 @@ package org.deullim.api.domain.location
 import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
+import jakarta.persistence.Table
 
 @Entity
+@Table(name = "user_locations")
 @DiscriminatorValue("USER")
 class UserLocation protected constructor() : Location() {
-    @Column(name = "member_id")
+    @Column(name = "member_id", nullable = false)
     var memberId: Long = 0L
         protected set
 

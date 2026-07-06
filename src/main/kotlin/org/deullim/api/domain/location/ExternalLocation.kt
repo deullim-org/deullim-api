@@ -3,8 +3,19 @@ package org.deullim.api.domain.location
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 
 @Entity
+@Table(
+    name = "external_locations",
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_external_locations_source",
+            columnNames = ["provider", "external_id"],
+        ),
+    ],
+)
 @DiscriminatorValue("EXTERNAL")
 class ExternalLocation protected constructor() : Location() {
     @Embedded
