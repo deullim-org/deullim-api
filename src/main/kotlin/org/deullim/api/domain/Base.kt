@@ -10,10 +10,14 @@ import java.time.Instant
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener::class)
-abstract class Base(
+abstract class Base {
     @CreatedDate
-    @Column(updatable = false)
-    var createdAt: Instant? = null,
+    @Column(nullable = false, updatable = false)
+    var createdAt: Instant? = null
+        protected set
+
     @LastModifiedDate
-    var updatedAt: Instant? = null,
-)
+    @Column(nullable = false)
+    var updatedAt: Instant? = null
+        protected set
+}

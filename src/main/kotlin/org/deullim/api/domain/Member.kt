@@ -83,6 +83,14 @@ class Member protected constructor() : Base() {
     fun removeDevice(device: Device) {
         devices = devices.filterNot { it.token == device.token && it.os == device.os }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Member) return false
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
 }
 
 data class Device(

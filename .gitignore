@@ -39,3 +39,13 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Dotfiles ###
+.*
+!.gitignore
+!.gitattributes
+!.dockerignore
+!.github
+!.claude
+!CLAUDE.md
+.claude/settings.local.json
